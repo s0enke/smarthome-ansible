@@ -1,0 +1,59 @@
+- name: Deploy notifier
+  hosts: smarthome
+  environment:
+    - PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin # https://discourse.osmc.tv/t/system-path-broken-when-running-a-non-interactive-sudo-command/4167/2
+
+  tasks:
+    
+  - apt_key: keyserver=keyserver.ubuntu.com id=7B2C3B0889BF5709A105D03AC2518248EEA14886
+  - name: Setup Oracle Java (abuse trusty PPA here, tested with wheezy)
+    apt_repository:
+      repo: deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
+  - shell: echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections
+    
+  - apt_key: url=http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+  - name: Mosquitto Repo
+    apt_repository:
+      repo: deb http://repo.mosquitto.org/debian {{ ansible_lsb['codename'] }} main
+   
+  - apt_key: url=https://bintray.com/user/downloadSubjectPublicKey?username=openhab
+  - name: OpenHAB repo
+    apt_repository:
+      repo: deb http://dl.bintray.com/openhab/apt-repo stable main
+
+  - apt: name={{ item }}
+    with_items:
+      - oracle-java8-installer
+      - mysql-server
+      - python-mysqldb
+      - openhab-runtime
+      - openhab-addon-binding-hue
+
+  - mysql_db: name=openhab
+  - mysql_user: name=openhab priv=*.*:ALL
+
+  - service: name=openhab state=started enabled=yes
+
+  - include_vars: config.yml
+
+  - template:
+      src: openhab.cfg.j2
+      dest: /etc/openhab/configurations/openhab.cfg
+    notify:
+      - restart openhab
+
+  - template:
+      src: openhab_items
+      dest: /etc/openhab/configurations/items/my.items
+    notify:
+      - restart openhab
+
+  - template:
+      src: default.sitemap 
+      dest: /etc/openhab/configurations/sitemaps/default.sitemap
+    notify:
+      - restart openhab
+
+  handlers:
+  - name: restart openhab
+    service: name=openhab state=restarted 

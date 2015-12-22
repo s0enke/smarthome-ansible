@@ -1,0 +1,6 @@
+sitemap default label="Main Menu"
+{
+  Frame label="Hues"{
+      Group label="Wohnzimmer" icon="house" item=Hues
+  }
+}

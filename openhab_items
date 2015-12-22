@@ -1,0 +1,2 @@
+Group Hues
+Switch hue1 "wohnzimmer" (Hues) { hue="1" }
