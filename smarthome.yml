@@ -5,7 +5,6 @@
 
   tasks:
   - include_vars: secrets.yml
-  - debug: msg={{ db_password }}
   - apt_key: keyserver=keyserver.ubuntu.com id=7B2C3B0889BF5709A105D03AC2518248EEA14886
   - name: Setup Oracle Java (abuse trusty PPA here, tested with wheezy and jessie raspbian)
     apt_repository:
