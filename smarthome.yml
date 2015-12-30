@@ -4,7 +4,8 @@
     - PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin # https://discourse.osmc.tv/t/system-path-broken-when-running-a-non-interactive-sudo-command/4167/2
 
   tasks:
-    
+  - include_vars: secrets.yml
+  - debug: msg={{ db_password }}
   - apt_key: keyserver=keyserver.ubuntu.com id=7B2C3B0889BF5709A105D03AC2518248EEA14886
   - name: Setup Oracle Java (abuse trusty PPA here, tested with wheezy and jessie raspbian)
     apt_repository:
@@ -30,7 +31,7 @@
       - openhab-addon-binding-hue
 
   - mysql_db: name=openhab
-  - mysql_user: name=openhab priv=*.*:ALL
+  - mysql_user: name=openhab password={{ db_password }} priv=*.*:ALL login_user=root
 
   - service: name=openhab state=started enabled=yes
 
