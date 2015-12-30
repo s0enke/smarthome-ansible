@@ -1,0 +1,40 @@
+# Connection name
+connection awsiot
+
+# Host and port of endpoint (your AWS IoT endpoint
+address {{ aws_mqtt_endpoint }}:8883
+
+# Default but you should start the bridge automatically
+start_type automatic
+
+# Name of the user used to connect to local Mosquitto Broker
+local_clientid awsiobridge
+
+# Looks like AWS IoT Broker supports bridges, so we should enable this to for better loop detection
+try_private true
+
+# Set the mqtt protocoll to 3.1.1
+bridge_protocol_version mqttv311
+
+# AWS IoT Broker will only accept session with cleansession set to true
+cleansession true
+
+# AWS IoT Broker will immediately close connections if you try to publish to $SYS, therefore we need to turn off bridge notification (took me a while to find out!)
+notifications false
+
+# Topic configuration
+# topic pattern [[[ out | in | both ] qos-level] local-prefix remote-prefix]
+# topic clients/total in 0 test/mosquitto/org $SYS/broker/
+topic yourtopic/ both 0
+
+# Set client ID used on AWS IoT
+remote_clientid {{ mosquitto_broker_aws_thing_name }}
+
+# Configure certificates like iot-root-ca.pem
+bridge_cafile /etc/mosquitto/ca_certificates/iot-root-ca.pem
+bridge_certfile /etc/mosquitto/certs/mosquittobroker-cert.pem
+bridge_keyfile /etc/mosquitto/certs/mosquittobroker-private-key.pem
+
+# Depending on system configuration, you might need deactivate hostname verification
+bridge_insecure false
+

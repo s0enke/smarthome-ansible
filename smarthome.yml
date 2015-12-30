@@ -1,9 +1,62 @@
+- name: AWS IOT
+  hosts: localhost
+  tasks:
+  - include_vars: "{{ item }}"
+    with_fileglob: vars/*
+
+  - name: Create AWS IOT thing
+    shell: >
+      aws iot create-thing
+      --region {{ aws_region }}
+      --thing-name {{ mosquitto_broker_aws_thing_name }}
+
+  - shell: >
+      aws iot describe-endpoint
+      --region {{ aws_region }}
+      --output text
+    register: endpoint_output
+  - set_fact:
+      aws_mqtt_endpoint: "{{ endpoint_output['stdout'] }}"
+
+  - name: Create AWS IOT policy
+    shell: >
+      aws iot create-policy
+      --region {{ aws_region }}
+      --policy-name {{ mosquitto_broker_aws_policy_name }}
+      --policy-document '{
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Stmt1445601185404",
+                  "Action": [
+                    "iot:Connect",
+                  "iot:Publish",
+              "iot:Receive",
+          "iot:Subscribe"
+        ],
+      "Effect": "Allow",
+      "Resource": "*"
+      }
+      ]
+      }'
+    register: result
+    failed_when: >
+      result.rc != 0 and ('already exist' not in result.stderr)
+
+  - name: Attach policy to cert
+    shell: >
+      aws iot attach-principal-policy
+      --region {{ aws_region }}
+      --principal {{ aws_iot_cert_arn }}
+      --policy-name {{ mosquitto_broker_aws_policy_name }}
+
 - name: Deploy notifier
   hosts: smarthome
   environment:
     - PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin # https://discourse.osmc.tv/t/system-path-broken-when-running-a-non-interactive-sudo-command/4167/2
 
   tasks:
+  - set_fact: aws_mqtt_endpoint="{{ hostvars['localhost']['aws_mqtt_endpoint'] }}"
   - include_vars: "{{ item }}"
     with_fileglob: vars/*
 
@@ -28,6 +81,8 @@
       - oracle-java8-installer
       - openhab-runtime
       - openhab-addon-binding-hue
+      - openhab-addon-binding-mqtt
+      - mosquitto
 
   - service: name=openhab state=started enabled=yes
 
@@ -49,6 +104,34 @@
     notify:
       - restart openhab
 
+  - get_url:
+      url: https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem
+      dest: /etc/mosquitto/ca_certificates/iot-root-ca.pem
+    notify:
+      - restart mosquitto
+
+  - copy:
+      content: "{{ aws_iot_private_key }}"
+      dest: /etc/mosquitto/certs/mosquittobroker-private-key.pem
+    notify:
+      - restart mosquitto
+
+  - copy:
+      content: "{{ aws_iot_cert }}"
+      dest: /etc/mosquitto/certs/mosquittobroker-cert.pem
+    notify:
+      - restart mosquitto
+
+  - template:
+      src: mosquitto.conf.j2
+      dest: /etc/mosquitto/conf.d/aws.conf
+    notify:
+      - restart mosquitto
+
   handlers:
   - name: restart openhab
-    service: name=openhab state=restarted 
+    service: name=openhab state=restarted
+
+  handlers:
+  - name: restart mosquitto
+    service: name=mosquitto state=restarted
