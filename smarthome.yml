@@ -24,13 +24,8 @@
   - apt: name={{ item }}
     with_items:
       - oracle-java8-installer
-      - mysql-server
-      - python-mysqldb
       - openhab-runtime
       - openhab-addon-binding-hue
-
-  - mysql_db: name=openhab
-  - mysql_user: name=openhab password={{ db_password }} priv=*.*:ALL login_user=root
 
   - service: name=openhab state=started enabled=yes
 
