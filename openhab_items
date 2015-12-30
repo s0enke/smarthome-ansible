@@ -1,2 +1,3 @@
 Group Hues
 Switch hue1 "wohnzimmer" (Hues) { hue="1" }
+Color hue2 "wohnzimmer" (Hues) { hue="1" }
