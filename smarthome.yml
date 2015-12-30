@@ -131,7 +131,5 @@
   handlers:
   - name: restart openhab
     service: name=openhab state=restarted
-
-  handlers:
   - name: restart mosquitto
     service: name=mosquitto state=restarted
