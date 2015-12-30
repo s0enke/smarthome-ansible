@@ -65,12 +65,12 @@
     apt_repository:
       repo: deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
   - shell: echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections
-    
+
   - apt_key: url=http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
   - name: Mosquitto Repo
     apt_repository:
       repo: deb http://repo.mosquitto.org/debian {{ ansible_lsb['codename'] }} main
-   
+
   - apt_key: url=https://bintray.com/user/downloadSubjectPublicKey?username=openhab
   - name: OpenHAB repo
     apt_repository:
@@ -99,7 +99,7 @@
       - restart openhab
 
   - template:
-      src: default.sitemap 
+      src: default.sitemap
       dest: /etc/openhab/configurations/sitemaps/default.sitemap
     notify:
       - restart openhab
