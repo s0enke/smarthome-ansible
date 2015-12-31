@@ -25,7 +25,7 @@ notifications false
 # Topic configuration
 # topic pattern [[[ out | in | both ] qos-level] local-prefix remote-prefix]
 # topic clients/total in 0 test/mosquitto/org $SYS/broker/
-topic yourtopic/ both 0
+topic # both 0 things/ $aws/things/
 
 # Set client ID used on AWS IoT
 remote_clientid {{ mosquitto_broker_aws_thing_name }}
